@@ -1,0 +1,12 @@
+[Unit]
+Description=Exports the selected GPIOs in /etc/b3d.json
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/b3d start
+ExecStop=/usr/local/bin/b3d stop
+ExecReload=/usr/local/bin/b3d reload
+
+[Install]
+WantedBy=multi-user.target
