@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+from __future__ import print_function
 import json
 import os
 import sys
@@ -26,7 +26,7 @@ def print_help():
              of the old ones""")
 
 
-def start(reload):
+def start(rld):
     with open(json_path) as gpio_json:
         gpios = json.load(gpio_json)["gpios"]
 
@@ -36,34 +36,43 @@ def start(reload):
                     path_gpio = gpio_sysfs_path + "gpio" + gpio["number"] + "/"
                     exist = os.path.exists(path_gpio)
 
-                    if reload and exist:
-                        print("Updating GPIO " + gpio["number"] + " ownership and permissions... ", end="")
+                    if rld and exist:
+                        print("Updating GPIO", gpio["number"],
+                              "ownership and permissions... ", end="")
                     else:
-                        print("Exporting and configuring GPIO " + gpio[
-                              "number"] + "... ", end="")
+                        print("Exporting and configuring GPIO", gpio["number"],
+                              end="")
                         print(gpio["number"], file=export)
                         export.flush()
 
-                    uid = pwd.getpwnam(
-                        gpio["owner"] if "owner" in gpio else default_owner).pw_uid
-                    gid = grp.getgrnam(
-                        gpio["group"] if "group" in gpio else default_group).gr_gid
-                    mode = int(
-                        gpio["mode"] if "mode" in gpio else default_mode, 8)
+                    if "owner" in gpio:
+                        uid = pwd.getpwnam(gpio["owner"]).pw_uid
+                    else:
+                        uid = pwd.getpwnam(default_owner).pw_uid
 
-                    for property in properties:
-                        os.chown(path_gpio + property, uid, gid)
-                        os.chmod(path_gpio + property, mode)
+                    if "group" in gpio:
+                        gid = grp.getgrnam(gpio["group"]).gr_gid
+                    else:
+                        gid = grp.getgrnam(default_group).gr_gid
 
-                        if not (reload and exist):
+                    if "mode" in gpio:
+                        mode = int(gpio["mode"], 8)
+                    else:
+                        mode = int(default_mode, 8)
+
+                    for pr in properties:
+                        os.chown(path_gpio + pr, uid, gid)
+                        os.chmod(path_gpio + pr, mode)
+
+                        if not (rld and exist):
                             try:
-                                value = gpio[property]
-                                with open(path_gpio + property, "w") as filename:
+                                value = gpio[pr]
+                                with open(path_gpio + pr, "w") as filename:
                                     print(value, file=filename)
                             except KeyError:
                                 pass
 
-                except BaseException as e:
+                except Exception as e:
                     print("ERROR : " + str(e))
                 else:
                     print("done")
@@ -82,7 +91,7 @@ def stop():
                         print("Unexporting GPIO {}...".format(number), end="")
                         print(number, file=unexport)
                         unexport.flush()
-                except BaseException as e:
+                except Exception as e:
                     print("ERROR :", str(e))
                 else:
                     print("done")
