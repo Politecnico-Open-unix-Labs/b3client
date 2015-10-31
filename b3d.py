@@ -14,8 +14,8 @@ data = {}
 
 
 def start():
-    for name, plugin in plugins.items():
-        plugin.setup(name)
+    for name, plug in plugins.items():
+        plug.setup(name)
 
     start_websocket()
 
@@ -26,9 +26,9 @@ def stop():
 
 
 def dispatch(ws):
-    for name, plugin in plugins.items():
-        plugin_data = data.get(name, {})
-        plugin.handle(plugin_data, ws)
+    for name, plug in plugins.items():
+        plug_data = data.get(name, {})
+        plug.handle(plug_data, ws)
 
 
 def on_message(ws, message):
