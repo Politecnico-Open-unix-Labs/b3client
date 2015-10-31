@@ -21,42 +21,32 @@ def start():
     start_websocket()
 
 
-def stop():
-    "Cleanup"
-    for plug in plugins.values():
-        plug.cleanup()
-
-
-def dispatch(ws):
-    "Call handle data function on plugins"
-    for name, plug in plugins.items():
-        plug_data = data.get(name, {})
-        plug.handle(plug_data, ws)
-
-
 def on_message(ws, message):
     """Update the local data and dispatch changes to plugins, passing ws because
-    some plugins should be aple to send changes to server"""
+    some plugins should be able to send changes to server"""
     diff = json.loads(message)
     data.update(diff)
 
     log.info(diff)
 
-    # TODO dispatch only if changes in plugin scope
-    dispatch(ws)
+    for name, plug in plugins.items():
+        plug_diff = diff.get(name, None)
+        if plug_diff:
+            plug.handle(data[name], ws)
 
 
 def on_error(ws, error):
-    "Restart"
+    "Restart websocket"
     log.error("Error: %", error.message)
     log.info("Reconnecting...")
     start_websocket()
 
 
 def on_close(ws):
-    "On connection close, call the plugins-stop function"
+    "On connection close, cleanup plugins"
     log.info("Connection closed")
-    stop()
+    for plug in plugins.values():
+        plug.cleanup()
 
 
 def on_open(ws):
