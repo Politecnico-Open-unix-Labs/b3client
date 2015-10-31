@@ -1,4 +1,4 @@
-from plugins import zero_plugin, logging
+from plugins import zero, state
 
-plugins = {"zero": zero_plugin,
-           "logging": logging}
+plugins = {"zero": zero,
+           "state": state}

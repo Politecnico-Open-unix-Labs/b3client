@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-import websocket
 import json
 import time
 from threading import Thread
+from websocket import WebSocketApp
 import logging
 from plugins import plugins
 
@@ -32,6 +32,7 @@ def on_message(ws, message):
     for name, plug in plugins.items():
         plug_diff = diff.get(name, None)
         if plug_diff:
+            log.info("dispatching %s to %s", str(data[name]), name)
             plug.handle(data[name], ws)
 
 
@@ -51,25 +52,21 @@ def on_close(ws):
 
 
 def on_open(ws):
-    "Send empty jsons to keep alive the connection, on an other thread"
-    def ping():
+    "Send empty jsons to keep alive the connection, on an separate thread"
+    def channel():
         # ws.send(json.dumps({"test": 123, "key": "antani"}))  # sample
-        while 1:
+        while True:
             ws.send("{}")  # ping to avoid timeout
             time.sleep(15)
 
-    Thread(target=ping).start()
+    Thread(target=channel).start()
 
 
 def start_websocket():
     "Start the websocket client on the main thread"
     log.info("Starting websocket")
-    ws = websocket.WebSocketApp("ws://localhost:8080",
-                                on_message=on_message,
-                                on_error=on_error,
-                                on_close=on_close,
-                                on_open=on_open)
-
+    ws = WebSocketApp("ws://localhost:8080", [],
+                      on_open, on_message, on_error, on_close)
     ws.run_forever()
 
 
