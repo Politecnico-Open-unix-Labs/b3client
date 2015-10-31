@@ -3,8 +3,11 @@ import websocket
 import json
 import time
 from threading import Thread
-
+import logging
 from plugins import plugins
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 
 
 data = {}
@@ -32,19 +35,19 @@ def on_message(ws, message):
     diff = json.loads(message)
     data.update(diff)
 
-    print(diff)
+    log.info(diff)
 
     dispatch(ws)
 
 
 def on_error(ws, error):
-    print("Error: " + error.message)
-    print("Reconnecting...")
+    log.error("Error: %", error.message)
+    log.info("Reconnecting...")
     start_websocket()
 
 
 def on_close(ws):
-    print("Connection closed")
+    log.info("Connection closed")
     stop()
 
 
