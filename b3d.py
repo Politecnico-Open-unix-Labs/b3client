@@ -37,7 +37,8 @@ def on_message(ws, message):
 
 def on_error(ws, error):
     "Restart websocket"
-    log.error("Error: %", error.message)
+    log.error("Error: %s", error)
+    time.sleep(1)
     log.info("Reconnecting...")
     start_websocket()
 
@@ -62,11 +63,13 @@ def on_open(ws):
 
 def start_websocket():
     "Start the websocket client on the main thread"
+    log.info("Starting websocket")
     ws = websocket.WebSocketApp("ws://localhost:8080",
                                 on_message=on_message,
                                 on_error=on_error,
                                 on_close=on_close,
                                 on_open=on_open)
+
     ws.run_forever()
 
 
