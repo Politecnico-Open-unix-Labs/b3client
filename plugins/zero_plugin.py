@@ -1,4 +1,4 @@
-# Simple Logging plugin
+# minimal plugin
 
 
 def setup(name):
@@ -6,7 +6,7 @@ def setup(name):
 
 
 def handle(data, ws):
-    print(data)
+    pass
 
 
 def clean():
