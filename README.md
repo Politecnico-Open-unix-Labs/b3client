@@ -1,6 +1,6 @@
 # b3d
 
-## TOD
+## TODO
 - config file
 - plugins from folders
 - make it a real Daemon
