@@ -20,10 +20,15 @@ data = {}
 
 def start():
     "Setup plugins and start websocket"
-    for name, plug in plugins.items():
-        plug.setup(name)
 
-    start_websocket()
+    log.info("Starting websocket")
+    ws = WebSocketApp(config.server, [],
+                      on_open, on_message, on_error, on_close)
+
+    for name, plug in plugins.items():
+        plug.setup(name, ws)
+
+    ws.run_forever()
 
 
 def on_message(ws, message):
@@ -38,7 +43,7 @@ def on_message(ws, message):
         plug_diff = diff.get(name, None)
         if plug_diff:
             log.info("dispatching %s to %s", str(data[name]), name)
-            plug.handle(data[name], ws)
+            plug.handle(data[name])
 
 
 def on_error(ws, error):
@@ -65,14 +70,6 @@ def on_open(ws):
             time.sleep(15)
 
     Thread(target=channel).start()
-
-
-def start_websocket():
-    "Start the websocket client on the main thread"
-    log.info("Starting websocket")
-    ws = WebSocketApp(config.server, [],
-                      on_open, on_message, on_error, on_close)
-    ws.run_forever()
 
 
 if __name__ == "__main__":

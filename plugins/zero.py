@@ -1,11 +1,11 @@
 # minimal plugin
 
 
-def setup(name):
+def setup(name, ws):
     pass
 
 
-def handle(data, ws):
+def handle(data):
     pass
 
 
