@@ -1,3 +1,3 @@
 from plugins import state
 
-plugins = {"state": state}
+plugins = {"state": state.Plugin()}
