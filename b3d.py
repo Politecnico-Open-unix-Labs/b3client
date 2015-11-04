@@ -25,8 +25,12 @@ def start():
     ws = WebSocketApp(config.server, [],
                       on_open, on_message, on_error, on_close)
 
+    def send(msg):
+        "Send msg (a dict) to the server"
+        ws.send(json.dumps(dict(msg, **{"key": config.token})))
+
     for name, plug in plugins.items():
-        plug.setup(name, ws)
+        plug.setup(name, send)
 
     ws.run_forever()
 
@@ -37,7 +41,7 @@ def on_message(ws, message):
     diff = json.loads(message)
     data.update(diff)
 
-    log.info(diff)
+    log.info("recived %s", diff)
 
     for name, plug in plugins.items():
         plug_diff = diff.get(name, None)
@@ -64,7 +68,6 @@ def on_close(ws):
 def on_open(ws):
     "Send empty jsons to keep alive the connection, on an separate thread"
     def channel():
-        # ws.send(json.dumps({"test": 123, "key": "antani"}))  # sample
         while True:
             ws.send("{}")  # ping to avoid timeout
             time.sleep(15)
