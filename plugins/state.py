@@ -1,8 +1,10 @@
 # Simple plugin
 
 class Plugin:
-    def setup(self, name, send):
-        self.send = send
+    name = "state"
+
+    def setup(self):
+        pass
 
     def handle(self, data):
         print("---")

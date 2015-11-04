@@ -5,8 +5,11 @@ from threading import Thread
 from websocket import WebSocketApp
 import logging
 
-from plugins import plugins
 import config
+from plugins import state
+
+
+plugins = [state.Plugin()]
 
 
 logging.basicConfig(level=getattr(logging,
@@ -29,8 +32,9 @@ def start():
         "Send msg (a dict) to the server"
         ws.send(json.dumps(dict(msg, **{"key": config.token})))
 
-    for name, plug in plugins.items():
-        plug.setup(name, send)
+    for plug in plugins:
+        plug.setup()
+        plug.send = send
 
     ws.run_forever()
 
@@ -43,7 +47,8 @@ def on_message(ws, message):
 
     log.info("recived %s", diff)
 
-    for name, plug in plugins.items():
+    for plug in plugins:
+        name = plug.name
         plug_diff = diff.get(name, None)
         if plug_diff:
             log.info("dispatching %s to %s", str(data[name]), name)
@@ -61,7 +66,7 @@ def on_error(ws, error):
 def on_close(ws):
     "On connection close, cleanup plugins"
     log.info("Connection closed")
-    for plug in plugins.values():
+    for plug in plugins:
         plug.cleanup()
 
 
