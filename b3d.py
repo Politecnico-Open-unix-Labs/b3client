@@ -60,14 +60,14 @@ def on_error(ws, error):
     log.error("Error: %s", error)
     time.sleep(1)
     log.info("Reconnecting...")
-    start_websocket()
+    ws.run_forever()
 
 
 def on_close(ws):
     "On connection close, cleanup plugins"
     log.info("Connection closed")
     for plug in plugins:
-        plug.cleanup()
+        plug.clean()
 
 
 def on_open(ws):
