@@ -4,9 +4,14 @@ import time
 from threading import Thread
 from websocket import WebSocketApp
 import logging
-from plugins import plugins
 
-logging.basicConfig(level=logging.INFO)
+from plugins import plugins
+import config
+
+
+logging.basicConfig(level=getattr(logging,
+                                  config.loglevel.upper(),
+                                  None))
 log = logging.getLogger(__name__)
 
 
@@ -65,7 +70,7 @@ def on_open(ws):
 def start_websocket():
     "Start the websocket client on the main thread"
     log.info("Starting websocket")
-    ws = WebSocketApp("ws://localhost:8080", [],
+    ws = WebSocketApp(config.server, [],
                       on_open, on_message, on_error, on_close)
     ws.run_forever()
 
