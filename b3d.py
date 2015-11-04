@@ -24,6 +24,13 @@ data = {}
 def start():
     "Setup plugins and start websocket"
 
+    for plug in plugins:
+        plug.setup()
+
+    start_websocket()
+
+
+def start_websocket():
     log.info("Starting websocket")
     ws = WebSocketApp(config.server, [],
                       on_open, on_message, on_error, on_close)
@@ -33,7 +40,6 @@ def start():
         ws.send(json.dumps(dict(msg, **{"key": config.token})))
 
     for plug in plugins:
-        plug.setup()
         plug.send = send
 
     ws.run_forever()
@@ -60,7 +66,7 @@ def on_error(ws, error):
     log.error("Error: %s", error)
     time.sleep(1)
     log.info("Reconnecting...")
-    ws.run_forever()
+    start_websocket()
 
 
 def on_close(ws):
