@@ -5,9 +5,17 @@ from threading import Thread
 from websocket import WebSocketApp
 import logging
 
+# import config and plugins from: $HOME/.b3d and /etc/b3d
+import os.path
+home_path = os.path.join(os.path.expanduser("~"), ".b3d")
+etc_path = os.path.join("/etc", "b3d")
+
+import sys
+sys.path.append(home_path)
+sys.path.append(etc_path)
+
 import config
 from plugins import state
-
 
 plugins = [state.Plugin()]
 
