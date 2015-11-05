@@ -15,9 +15,15 @@ sys.path.append(home_path)
 sys.path.append(etc_path)
 
 import config
-from plugins import state
 
-plugins = [state.Plugin()]
+
+def get_plugin(name):
+    "Dynamically: from  plugins import plugin_name"
+    module = __import__("plugins", fromlist=[name])
+    return module.__dict__[name]
+
+plugins = [get_plugin(name).Plugin()
+           for name in config.plugins]
 
 
 logging.basicConfig(level=getattr(logging,
