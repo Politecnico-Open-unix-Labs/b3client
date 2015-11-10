@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 import json
 import time
+import logging
 from threading import Thread
 from websocket import WebSocketApp
-import logging
+
 
 # import config and plugins from: $HOME/.b3d and /etc/b3d
 import os.path
@@ -25,11 +26,15 @@ def get_plugin(name):
 plugins = [get_plugin(name).Plugin()
            for name in config.plugins]
 
+log_level = getattr(logging, config.log_level.upper(), None)
 
-logging.basicConfig(level=getattr(logging,
-                                  config.loglevel.upper(),
-                                  None))
+logging.basicConfig(level=log_level)
 log = logging.getLogger(__name__)
+
+log.propagate = False  # hide logs from stdout
+log_fd = logging.FileHandler(config.log_file, "w")
+log_fd.setLevel(log_level)
+log.addHandler(log_fd)
 
 
 data = {}

@@ -4,3 +4,4 @@ token = "antani"
 plugins = ["state"]
 
 loglevel = "error"
+log_file = "/tmp/b3d.log"
