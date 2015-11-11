@@ -1,6 +1,5 @@
 # b3d
 
 ## TODO
-- plugins from folders
-- make it a real Daemon
+- better README.md
 - `setup.py`

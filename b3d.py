@@ -2,8 +2,10 @@
 import json
 import time
 import logging
+from sys import argv
 from threading import Thread
 from websocket import WebSocketApp
+from daemonize import Daemonize
 
 
 # import config and plugins from: $HOME/.b3d and /etc/b3d
@@ -26,12 +28,12 @@ def get_plugin(name):
 plugins = [get_plugin(name).Plugin()
            for name in config.plugins]
 
+
 log_level = getattr(logging, config.log_level.upper(), None)
 
 logging.basicConfig(level=log_level)
 log = logging.getLogger(__name__)
 
-log.propagate = False  # hide logs from stdout
 log_fd = logging.FileHandler(config.log_file, "w")
 log_fd.setLevel(log_level)
 log.addHandler(log_fd)
@@ -40,7 +42,7 @@ log.addHandler(log_fd)
 data = {}
 
 
-def start():
+def start_daemon():
     "Setup plugins and start websocket"
 
     for plug in plugins:
@@ -106,4 +108,34 @@ def on_open(ws):
 
 
 if __name__ == "__main__":
-    start()
+    daemon = Daemonize(app="b3d",
+                       pid=config.pid_file,
+                       action=start_daemon,
+                       logger=log,
+                       keep_fds=[log_fd.stream.fileno()])
+
+    def start():
+        daemon.start()
+
+    def stop():
+        try:
+            daemon.exit()
+        except FileNotFoundError:
+            log.warning("Daemon already dead")
+
+    def restart():
+        stop()
+        start()
+
+    def help_():
+        print("{} start|stop|restart|help".format(argv[0]))
+
+    cmds = {"start": start,
+            "stop": stop,
+            "restart": restart,
+            "help": help_}
+
+    if len(argv)==2:
+        cmds.get(argv[1], help_)()
+    else:
+        help_()

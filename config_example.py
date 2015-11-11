@@ -3,5 +3,7 @@ token = "antani"
 
 plugins = ["state"]
 
-loglevel = "error"
+log_level = "error"
 log_file = "/tmp/b3d.log"
+
+pid_file = "/tmp/b3d.pid"
