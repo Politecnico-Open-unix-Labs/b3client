@@ -5,7 +5,6 @@ import logging
 from sys import argv
 from threading import Thread
 from websocket import WebSocketApp
-from daemonize import Daemonize
 
 
 # import config and plugins from: $HOME/.b3d and /etc/b3d
@@ -20,6 +19,7 @@ sys.path.append(etc_path)
 import config
 
 
+## Inizialize plugins
 def get_plugin(name):
     "Dynamically: from  plugins import plugin_name"
     module = __import__("plugins", fromlist=[name])
@@ -27,8 +27,10 @@ def get_plugin(name):
 
 plugins = [get_plugin(name).Plugin()
            for name in config.plugins]
+#
 
 
+## Inizialize logging
 log_level = getattr(logging, config.log_level.upper(), None)
 
 logging.basicConfig(level=log_level)
@@ -37,18 +39,10 @@ log = logging.getLogger(__name__)
 log_fd = logging.FileHandler(config.log_file, "w")
 log_fd.setLevel(log_level)
 log.addHandler(log_fd)
+#
 
 
 data = {}
-
-
-def start_daemon():
-    "Setup plugins and start websocket"
-
-    for plug in plugins:
-        plug.setup()
-
-    start_websocket()
 
 
 def start_websocket():
@@ -75,11 +69,11 @@ def on_message(ws, message):
     log.info("recived %s", diff)
 
     for plug in plugins:
-        name = plug.name
-        plug_diff = diff.get(name, None)
+        section = plug.section
+        plug_diff = diff.get(section, None)
         if plug_diff:
-            log.info("dispatching %s to %s", str(data[name]), name)
-            plug.handle(data[name])
+            log.info("dispatching %s to %s", str(data[section]), section)
+            plug.handle(data[section])
 
 
 def on_error(ws, error):
@@ -108,34 +102,7 @@ def on_open(ws):
 
 
 if __name__ == "__main__":
-    daemon = Daemonize(app="b3d",
-                       pid=config.pid_file,
-                       action=start_daemon,
-                       logger=log,
-                       keep_fds=[log_fd.stream.fileno()])
+    for plug in plugins:
+        plug.setup()
 
-    def start():
-        daemon.start()
-
-    def stop():
-        try:
-            daemon.exit()
-        except FileNotFoundError:
-            log.warning("Daemon already dead")
-
-    def restart():
-        stop()
-        start()
-
-    def help_():
-        print("{} start|stop|restart|help".format(argv[0]))
-
-    cmds = {"start": start,
-            "stop": stop,
-            "restart": restart,
-            "help": help_}
-
-    if len(argv)==2:
-        cmds.get(argv[1], help_)()
-    else:
-        help_()
+    start_websocket()
