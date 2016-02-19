@@ -1,9 +1,13 @@
-# Simple plugin
+# import RPi.GPIO as GPIO
 
 class Plugin:
-    name = "state"
+    section = "state"
 
     def setup(self):
+        # GPIO.setmode(GPIO.BOARD)
+        # GPIO.setup(led, GPIO.OUT)
+        # GPIO.output(led, GPIO.HIGH)  # red
+        # GPIO.output(led, GPIO.LOW)  # green
         pass
 
     def handle(self, data):
