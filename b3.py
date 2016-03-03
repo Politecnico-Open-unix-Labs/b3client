@@ -21,10 +21,14 @@ log.addHandler(log_fd)
 
 
 def parse_path(path):
+    "Split path in a list"
     return re.findall(r"[\w]+", path)
 
 
 def set_value(d, path, value):
+    "Set value in a dictonary given the path"
+    path = parse_path(path)
+
     if not path:
         return
 
@@ -37,17 +41,40 @@ def set_value(d, path, value):
     d[path[0]] = value
 
 
+def get_value(d, path):
+    "Get value from a dictonary given the path"
+    path = parse_path(path)
+
+    if not path:
+        return {}
+
+    while len(path) > 1:
+        key = path[0]
+        if key in d:
+            d = d[key]
+        else:
+            return {}
+        path = path[1:]
+
+    key = path[0]
+    if key in d:
+        return d[key]
+    else:
+        return {}
+
+
 class Client(object):
     def __init__(self, server, token=""):
+        "Initialize"
         self.server = server
         self.token = token
-        self.data = {}
+        self.callbacks = {}
         self.ws = None
 
     def send(self, path, value):
         "Send msg (a dict) to the server"
         msg = {"key": self.token}
-        set_value(msg, parse_path(path), value)
+        set_value(msg, path, value)
 
         if not self.ws:
             return
@@ -55,6 +82,7 @@ class Client(object):
         self.ws.send(json.dumps(msg))
 
     def start(self):
+        "Start websocket"
         log.info("Starting websocket")
         self.ws = WebSocketApp(self.server, [],
                                self.cb_on_open, self.cb_on_message,
@@ -62,13 +90,21 @@ class Client(object):
 
         self.ws.run_forever()
 
-    def on_message(self, f):
-        def cb(ws, message):
-            f(message)
-        self.cb_on_message = cb
+    def on_message(self, path):
+        "Decore a funcion to make it a callback"
+        def decorator(f):
+            self.callbacks[path] = f
+
+        return decorator
 
     def cb_on_message(self, ws, message):
-        pass
+        "Dispatch messages to callbacks"
+        for path in self.callbacks:
+            value = get_value(json.loads(message),
+                              path)
+
+            if value != {}:
+                self.callbacks[path](value)
 
     def cb_on_error(self, ws, error):
         "Restart websocket"

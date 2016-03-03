@@ -2,7 +2,6 @@
 from __future__ import print_function
 
 import RPi.GPIO as GPIO
-import json
 from b3 import Client
 
 
@@ -30,21 +29,18 @@ def pressed(pin):
     client.send("/state/open", not state_open)
 
 
-@client.on_message
-def on_message(message):
-    diff = json.loads(message)
-    client.data.update(diff)
-    print("on message", message)
-    print("new data is:", client.data)
+@client.on_message("/state/open")
+def on_message(value):
+    print("state_open is:", value)
 
-    global state_open
-    state_open = client.data["state"]["open"]
-    print("state_open is:", state_open)
-
-    if state_open:
+    if value:
         green()
     else:
         red()
+
+    global state_open
+    state_open = value
+
 
 # setup
 GPIO.setmode(GPIO.BCM)
