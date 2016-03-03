@@ -16,10 +16,18 @@ token = "+-5OWDW8sS;bUPoDq-W5-d4i=/qTReG1"
 client = Client(server, token)
 
 
+def green():
+    GPIO.output(led_pin, GPIO.HIGH)
+
+
+def red():
+    GPIO.output(led_pin, GPIO.LOW)
+
+
 def pressed(pin):
     "Button pressed"
     print("pressed")
-    client.send({"state": {"open": not state_open}})
+    client.send("/state/open", not state_open)
 
 
 @client.on_message
@@ -32,12 +40,6 @@ def on_message(message):
     global state_open
     state_open = client.data["state"]["open"]
     print("state_open is:", state_open)
-
-    def green():
-        GPIO.output(led_pin, GPIO.HIGH)
-
-    def red():
-        GPIO.output(led_pin, GPIO.LOW)
 
     if state_open:
         green()

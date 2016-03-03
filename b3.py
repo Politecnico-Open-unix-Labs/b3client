@@ -1,4 +1,5 @@
 import json
+import re
 import time
 import logging
 from threading import Thread
@@ -19,6 +20,23 @@ log.addHandler(log_fd)
 #
 
 
+def parse_path(path):
+    return re.findall(r"[\w]+", path)
+
+
+def set_value(d, path, value):
+    if not path:
+        return
+
+    while len(path) > 1:
+        d[path[0]] = {}
+
+        d = d[path[0]]
+        path = path[1:]
+
+    d[path[0]] = value
+
+
 class Client(object):
     def __init__(self, server, token=""):
         self.server = server
@@ -26,13 +44,15 @@ class Client(object):
         self.data = {}
         self.ws = None
 
-    def send(self, msg):
+    def send(self, path, value):
         "Send msg (a dict) to the server"
+        msg = {"key": self.token}
+        set_value(msg, parse_path(path), value)
 
         if not self.ws:
             return
 
-        self.ws.send(json.dumps(dict(msg, **{"key": self.token})))
+        self.ws.send(json.dumps(msg))
 
     def start(self):
         log.info("Starting websocket")
